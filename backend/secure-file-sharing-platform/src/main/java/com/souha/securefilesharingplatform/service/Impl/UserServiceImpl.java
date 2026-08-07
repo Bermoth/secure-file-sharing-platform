@@ -1,4 +1,4 @@
-package com.souha.securefilesharingplatform.service.Impl;
+package com.souha.securefilesharingplatform.service.impl;
 
 import com.souha.securefilesharingplatform.entity.User;
 import com.souha.securefilesharingplatform.repository.UserRepository;

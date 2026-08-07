@@ -1,10 +1,19 @@
 package com.souha.securefilesharingplatform.entity;
 
+import java.util.Collection;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+//import java.util.Collection;
+import java.util.List;
+
 import jakarta.persistence.*;
 
-@Entity
+@Entity //marks this class as a JPA entity
 @Table(name = "users")
-public class User {
+public class User implements UserDetails { //UserDetails interface wraps the app user's data into a standarized format that spring understand
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +41,7 @@ public class User {
         return id;
     }
 
-    public String getUsername() {
+    public String getUsernameField() {
         return username;
     }
 
@@ -63,4 +72,34 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+
+@Override
+public Collection<? extends GrantedAuthority> getAuthorities() {
+    return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+}
+
+@Override
+public String getUsername() {
+    return email;
+}
+
+@Override
+public boolean isAccountNonExpired() {
+    return true;
+}
+
+@Override
+public boolean isAccountNonLocked() {
+    return true;
+}
+
+@Override
+public boolean isCredentialsNonExpired() {
+    return true;
+}
+
+@Override
+public boolean isEnabled() {
+    return true;
+}
 }
