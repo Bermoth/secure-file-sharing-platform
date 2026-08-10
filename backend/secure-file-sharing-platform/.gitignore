@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### what shouldn't be shared
+.env
