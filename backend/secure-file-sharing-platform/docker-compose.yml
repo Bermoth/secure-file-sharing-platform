@@ -11,5 +11,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  app:
+    build: .
+    container_name: filesharing-app
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - file_storage:/app/uploads
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:
+  file_storage:
