@@ -19,4 +19,6 @@ public interface FileShareRepository
             Long fileId,
             Long userId
     );
+
+    void deleteByFileIdAndSharedWithId(Long fileId, Long userId);
 }

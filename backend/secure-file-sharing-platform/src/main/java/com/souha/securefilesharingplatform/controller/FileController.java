@@ -1,6 +1,7 @@
 package com.souha.securefilesharingplatform.controller;
 
 import com.souha.securefilesharingplatform.entity.File;
+import com.souha.securefilesharingplatform.entity.User;
 import com.souha.securefilesharingplatform.service.FileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -72,4 +73,25 @@ public class FileController {
     public ResponseEntity<List<File>> getSharedFiles() {
         return ResponseEntity.ok(fileService.getSharedFiles());
     }
+
+    @GetMapping("/{fileId}/shares")
+    public ResponseEntity<List<User>> getFileShares(
+        @PathVariable Long fileId
+) {
+    return ResponseEntity.ok(
+            fileService.getFileShares(fileId)
+    );
+}
+
+    @DeleteMapping("/{fileId}/share/{userId}")
+    public ResponseEntity<String> revokeShare(
+        @PathVariable Long fileId,
+        @PathVariable Long userId
+) {
+    fileService.revokeShare(fileId, userId);
+
+    return ResponseEntity.ok(
+            "File sharing revoked successfully"
+    );
+}
 }
