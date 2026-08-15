@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public class FileServiceImpl implements FileService {
 
@@ -44,7 +45,11 @@ public class FileServiceImpl implements FileService {
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
         this.fileShareRepository = fileShareRepository;
+
     }
+
+        String messageFile = "File not Found";
+        String messageUser = "User not Found";
 
     @Override
     public File uploadFile(MultipartFile file) {
@@ -87,7 +92,7 @@ public class FileServiceImpl implements FileService {
             User owner = userRepository.findByEmail(email)
                     .orElseThrow(() ->
                             new ResourceNotFoundException(
-                                    "User not found"
+                                    messageUser
                             ));
 
             File fileEntity = new File();
@@ -125,7 +130,7 @@ public class FileServiceImpl implements FileService {
         User owner = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User not found"
+                                messageUser
                         ));
 
         return fileRepository.findByOwner(owner);
@@ -152,13 +157,13 @@ public class FileServiceImpl implements FileService {
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User not found"
+                                messageUser
                         ));
 
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "File not found"
+                                messageFile
                         ));
 
         if (file.getOwner() == null) {
@@ -239,13 +244,13 @@ public class FileServiceImpl implements FileService {
         User owner = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User not found"
+                                messageUser
                         ));
 
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "File not found"
+                                messageFile
                         ));
 
         if (file.getOwner() == null ||
@@ -318,7 +323,7 @@ public class FileServiceImpl implements FileService {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "File not found"
+                                messageFile
                         ));
 
         if (file.getOwner() == null ||
@@ -380,7 +385,7 @@ public class FileServiceImpl implements FileService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User not found"
+                                messageUser
                         ));
 
         return fileShareRepository.findBySharedWith(user)
@@ -410,13 +415,13 @@ public class FileServiceImpl implements FileService {
         User owner = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User not found"
+                                messageUser
                         ));
 
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "File not found"
+                                messageFile
                         ));
 
         if (file.getOwner() == null ||
@@ -460,13 +465,13 @@ public class FileServiceImpl implements FileService {
         User owner = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "User not found"
+                                messageUser
                         ));
 
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "File not found"
+                                messageFile
                         ));
 
         if (file.getOwner() == null ||
