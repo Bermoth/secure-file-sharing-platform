@@ -8,11 +8,11 @@ import com.souha.securefilesharingplatform.exception.ResourceNotFoundException;
 import com.souha.securefilesharingplatform.repository.FileRepository;
 import com.souha.securefilesharingplatform.repository.FileShareRepository;
 import com.souha.securefilesharingplatform.repository.UserRepository;
+import com.souha.securefilesharingplatform.service.FileEncryptionService;
 import com.souha.securefilesharingplatform.service.FileService;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,13 +26,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-
 @Service
 public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final FileShareRepository fileShareRepository;
+    private final FileEncryptionService fileEncryptionService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -40,69 +40,108 @@ public class FileServiceImpl implements FileService {
     public FileServiceImpl(
             FileRepository fileRepository,
             UserRepository userRepository,
-            FileShareRepository fileShareRepository
+            FileShareRepository fileShareRepository,
+            FileEncryptionService fileEncryptionService
     ) {
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
         this.fileShareRepository = fileShareRepository;
-
+        this.fileEncryptionService = fileEncryptionService;
     }
 
-        String messageFile = "File not Found";
-        String messageUser = "User not Found";
+    String messageFile = "File not Found";
+    String messageUser = "User not Found";
 
     @Override
     public File uploadFile(MultipartFile file) {
 
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be empty");
+            throw new IllegalArgumentException(
+                    "File cannot be empty"
+            );
         }
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
         try {
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath =
+                    Paths.get(uploadDir);
 
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
 
-            String originalFilename = file.getOriginalFilename();
+            String originalFilename =
+                    file.getOriginalFilename();
 
-            if (originalFilename == null || originalFilename.isBlank()) {
+            if (originalFilename == null ||
+                    originalFilename.isBlank()) {
+
                 throw new IllegalArgumentException(
                         "File name cannot be empty"
                 );
             }
 
             String storedFilename =
-                    UUID.randomUUID() + "_" + originalFilename;
+                    UUID.randomUUID() +
+                    "_" +
+                    originalFilename +
+                    ".enc";
 
-            Path filePath = uploadPath.resolve(storedFilename);
+            Path filePath =
+                    uploadPath.resolve(storedFilename);
 
-            Files.copy(file.getInputStream(), filePath);
+            fileEncryptionService.encryptFile(
+                    file.getInputStream(),
+                    filePath
+            );
 
-            String email = authentication.getName();
+            String email =
+                    authentication.getName();
 
-            User owner = userRepository.findByEmail(email)
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    messageUser
-                            ));
+            User owner =
+                    userRepository.findByEmail(email)
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            messageUser
+                                    ));
 
             File fileEntity = new File();
 
-            fileEntity.setOriginalFilename(originalFilename);
-            fileEntity.setStoredFilename(storedFilename);
-            fileEntity.setContentType(file.getContentType());
-            fileEntity.setSize(file.getSize());
-            fileEntity.setStoragePath(filePath.toString());
-            fileEntity.setCreatedAt(LocalDateTime.now());
+            fileEntity.setOriginalFilename(
+                    originalFilename
+            );
+
+            fileEntity.setStoredFilename(
+                    storedFilename
+            );
+
+            fileEntity.setContentType(
+                    file.getContentType()
+            );
+
+            fileEntity.setSize(
+                    file.getSize()
+            );
+
+            fileEntity.setStoragePath(
+                    filePath.toString()
+            );
+
+            fileEntity.setCreatedAt(
+                    LocalDateTime.now()
+            );
+
             fileEntity.setOwner(owner);
 
             return fileRepository.save(fileEntity);
@@ -119,19 +158,26 @@ public class FileServiceImpl implements FileService {
     public List<File> getMyFiles() {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
-        String email = authentication.getName();
+        String email =
+                authentication.getName();
 
-        User owner = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageUser
-                        ));
+        User owner =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageUser
+                                ));
 
         return fileRepository.findByOwner(owner);
     }
@@ -146,25 +192,33 @@ public class FileServiceImpl implements FileService {
         }
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
-        String email = authentication.getName();
+        String email =
+                authentication.getName();
 
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageUser
-                        ));
+        User currentUser =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageUser
+                                ));
 
-        File file = fileRepository.findById(fileId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageFile
-                        ));
+        File file =
+                fileRepository.findById(fileId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageFile
+                                ));
 
         if (file.getOwner() == null) {
             throw new ResourceNotFoundException(
@@ -174,19 +228,23 @@ public class FileServiceImpl implements FileService {
 
         if (file.getOwner().getId() == null ||
                 currentUser.getId() == null) {
+
             throw new ResourceNotFoundException(
                     "Invalid user information"
             );
         }
 
         boolean isOwner =
-                file.getOwner().getId().equals(currentUser.getId());
+                file.getOwner()
+                        .getId()
+                        .equals(currentUser.getId());
 
         boolean isShared =
-                fileShareRepository.existsByFileIdAndSharedWithId(
-                        fileId,
-                        currentUser.getId()
-                );
+                fileShareRepository
+                        .existsByFileIdAndSharedWithId(
+                                fileId,
+                                currentUser.getId()
+                        );
 
         if (!isOwner && !isShared) {
             throw new ForbiddenException(
@@ -196,24 +254,25 @@ public class FileServiceImpl implements FileService {
 
         if (file.getStoragePath() == null ||
                 file.getStoragePath().isBlank()) {
+
             throw new ResourceNotFoundException(
                     "File storage path not found"
             );
         }
 
-        Path path = Paths.get(file.getStoragePath());
+        Path path =
+                Paths.get(file.getStoragePath());
 
         try {
-            Resource resource =
-                    new UrlResource(path.toUri());
+            if (!Files.exists(path) ||
+                    !Files.isReadable(path)) {
 
-            if (!resource.exists() || !resource.isReadable()) {
                 throw new ResourceNotFoundException(
                         "File cannot be read"
                 );
             }
 
-            return resource;
+        return fileEncryptionService.decryptFile(path, file.getOriginalFilename());
 
         } catch (IOException e) {
             throw new RuntimeException(
@@ -233,35 +292,47 @@ public class FileServiceImpl implements FileService {
         }
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
-        String email = authentication.getName();
+        String email =
+                authentication.getName();
 
-        User owner = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageUser
-                        ));
+        User owner =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageUser
+                                ));
 
-        File file = fileRepository.findById(fileId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageFile
-                        ));
+        File file =
+                fileRepository.findById(fileId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageFile
+                                ));
 
         if (file.getOwner() == null ||
                 file.getOwner().getId() == null ||
                 owner.getId() == null) {
+
             throw new ResourceNotFoundException(
                     "File owner not found"
             );
         }
 
-        if (!file.getOwner().getId().equals(owner.getId())) {
+        if (!file.getOwner()
+                .getId()
+                .equals(owner.getId())) {
+
             throw new ForbiddenException(
                     "You don't have permission to delete this file"
             );
@@ -271,7 +342,8 @@ public class FileServiceImpl implements FileService {
             if (file.getStoragePath() != null &&
                     !file.getStoragePath().isBlank()) {
 
-                Path path = Paths.get(file.getStoragePath());
+                Path path =
+                        Paths.get(file.getStoragePath());
 
                 Files.deleteIfExists(path);
             }
@@ -291,7 +363,10 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void shareFile(Long fileId, String email) {
+    public void shareFile(
+            Long fileId,
+            String email
+    ) {
 
         if (fileId == null) {
             throw new IllegalArgumentException(
@@ -306,45 +381,58 @@ public class FileServiceImpl implements FileService {
         }
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
-        String ownerEmail = authentication.getName();
+        String ownerEmail =
+                authentication.getName();
 
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Owner not found"
-                        ));
+        User owner =
+                userRepository.findByEmail(ownerEmail)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Owner not found"
+                                ));
 
-        File file = fileRepository.findById(fileId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageFile
-                        ));
+        File file =
+                fileRepository.findById(fileId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageFile
+                                ));
 
         if (file.getOwner() == null ||
                 file.getOwner().getId() == null ||
                 owner.getId() == null) {
+
             throw new ResourceNotFoundException(
                     "File owner not found"
             );
         }
 
-        if (!file.getOwner().getId().equals(owner.getId())) {
+        if (!file.getOwner()
+                .getId()
+                .equals(owner.getId())) {
+
             throw new ForbiddenException(
                     "You don't have permission to share this file"
             );
         }
 
-        User sharedWith = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User to share with not found"
-                        ));
+        User sharedWith =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "User to share with not found"
+                                ));
 
         if (sharedWith.getId() == null) {
             throw new ResourceNotFoundException(
@@ -352,20 +440,25 @@ public class FileServiceImpl implements FileService {
             );
         }
 
-        if (fileShareRepository.existsByFileIdAndSharedWithId(
-                fileId,
-                sharedWith.getId()
-        )) {
+        if (fileShareRepository
+                .existsByFileIdAndSharedWithId(
+                        fileId,
+                        sharedWith.getId()
+                )) {
+
             throw new IllegalArgumentException(
                     "File is already shared with this user"
             );
         }
 
-        FileShare fileShare = new FileShare();
+        FileShare fileShare =
+                new FileShare();
 
         fileShare.setFile(file);
         fileShare.setSharedWith(sharedWith);
-        fileShare.setSharedAt(LocalDateTime.now());
+        fileShare.setSharedAt(
+                LocalDateTime.now()
+        );
 
         fileShareRepository.save(fileShare);
     }
@@ -374,28 +467,38 @@ public class FileServiceImpl implements FileService {
     public List<File> getSharedFiles() {
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
-        String email = authentication.getName();
+        String email =
+                authentication.getName();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageUser
-                        ));
+        User user =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageUser
+                                ));
 
-        return fileShareRepository.findBySharedWith(user)
+        return fileShareRepository
+                .findBySharedWith(user)
                 .stream()
                 .map(FileShare::getFile)
                 .toList();
     }
 
     @Override
-    public List<User> getFileShares(Long fileId) {
+    public List<User> getFileShares(
+            Long fileId
+    ) {
 
         if (fileId == null) {
             throw new IllegalArgumentException(
@@ -404,93 +507,128 @@ public class FileServiceImpl implements FileService {
         }
 
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
         }
 
-        String email = authentication.getName();
+        String email =
+                authentication.getName();
 
-        User owner = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageUser
-                        ));
+        User owner =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageUser
+                                ));
 
-        File file = fileRepository.findById(fileId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageFile
-                        ));
+        File file =
+                fileRepository.findById(fileId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        messageFile
+                                ));
 
         if (file.getOwner() == null ||
                 file.getOwner().getId() == null ||
                 owner.getId() == null) {
+
             throw new ResourceNotFoundException(
                     "File owner not found"
             );
         }
 
-        if (!file.getOwner().getId().equals(owner.getId())) {
+        if (!file.getOwner()
+                .getId()
+                .equals(owner.getId())) {
+
             throw new ForbiddenException(
                     "You don't have permission to view this file's shares"
             );
         }
 
-        return fileShareRepository.findByFile(file)
+        return fileShareRepository
+                .findByFile(file)
                 .stream()
                 .map(FileShare::getSharedWith)
                 .toList();
     }
 
-@Override
-public void revokeShare(Long fileId, Long userId) {
+    @Override
+    public void revokeShare(
+            Long fileId,
+            Long userId
+    ) {
 
-    Authentication authentication =
-            SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
 
-    if (authentication == null || !authentication.isAuthenticated()) {
-        throw new ForbiddenException("User is not authenticated");
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new ForbiddenException(
+                    "User is not authenticated"
+            );
+        }
+
+        String email =
+                authentication.getName();
+
+        User owner =
+                userRepository.findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "User not found"
+                                ));
+
+        File file =
+                fileRepository.findById(fileId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "File not found"
+                                ));
+
+        if (file.getOwner() == null ||
+                file.getOwner().getId() == null) {
+
+            throw new ResourceNotFoundException(
+                    "File owner not found"
+            );
+        }
+
+        if (!file.getOwner()
+                .getId()
+                .equals(owner.getId())) {
+
+            throw new ForbiddenException(
+                    "You don't have permission to modify this file"
+            );
+        }
+
+        FileShare fileShare =
+                fileShareRepository
+                        .findByFile(file)
+                        .stream()
+                        .filter(share ->
+                                share.getSharedWith() != null &&
+                                share.getSharedWith().getId() != null &&
+                                share.getSharedWith()
+                                        .getId()
+                                        .equals(userId)
+                        )
+                        .findFirst()
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "File is not shared with this user"
+                                ));
+
+        fileShareRepository.delete(fileShare);
     }
-
-    String email = authentication.getName();
-
-    User owner = userRepository.findByEmail(email)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException("User not found"));
-
-    File file = fileRepository.findById(fileId)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException("File not found"));
-
-    if (file.getOwner() == null ||
-            file.getOwner().getId() == null) {
-        throw new ResourceNotFoundException(
-                "File owner not found"
-        );
-    }
-
-    if (!file.getOwner().getId().equals(owner.getId())) {
-        throw new ForbiddenException(
-                "You don't have permission to modify this file"
-        );
-    }
-
-    FileShare fileShare =
-            fileShareRepository.findByFile(file)
-                    .stream()
-                    .filter(share ->
-                            share.getSharedWith() != null &&
-                            share.getSharedWith().getId() != null &&
-                            share.getSharedWith().getId().equals(userId)
-                    )
-                    .findFirst()
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "File is not shared with this user"
-                            ));
-
-    fileShareRepository.delete(fileShare);
-}
 }

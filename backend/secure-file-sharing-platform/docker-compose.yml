@@ -19,6 +19,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      FILE_ENCRYPTION_KEY: ${FILE_ENCRYPTION_KEY}
     volumes:
       - file_storage:/app/uploads
     depends_on:
