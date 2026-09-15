@@ -444,62 +444,53 @@ public class FileServiceImpl implements FileService {
                 .toList();
     }
 
-    @Override
-    public void revokeShare(Long fileId, Long userId) {
+@Override
+public void revokeShare(Long fileId, Long userId) {
 
-        if (fileId == null || userId == null) {
-            throw new IllegalArgumentException(
-                    "File ID and user ID cannot be null"
-            );
-        }
+    Authentication authentication =
+            SecurityContextHolder.getContext().getAuthentication();
 
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || !authentication.isAuthenticated()) {
+        throw new ForbiddenException("User is not authenticated");
+    }
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ForbiddenException("User is not authenticated");
-        }
+    String email = authentication.getName();
 
-        String email = authentication.getName();
+    User owner = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("User not found"));
 
-        User owner = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageUser
-                        ));
+    File file = fileRepository.findById(fileId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("File not found"));
 
-        File file = fileRepository.findById(fileId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                messageFile
-                        ));
-
-        if (file.getOwner() == null ||
-                file.getOwner().getId() == null ||
-                owner.getId() == null) {
-            throw new ResourceNotFoundException(
-                    "File owner not found"
-            );
-        }
-
-        if (!file.getOwner().getId().equals(owner.getId())) {
-            throw new ForbiddenException(
-                    "You don't have permission to modify this file"
-            );
-        }
-
-        if (!fileShareRepository.existsByFileIdAndSharedWithId(
-                fileId,
-                userId
-        )) {
-            throw new ResourceNotFoundException(
-                    "File is not shared with this user"
-            );
-        }
-
-        fileShareRepository.deleteByFileIdAndSharedWithId(
-                fileId,
-                userId
+    if (file.getOwner() == null ||
+            file.getOwner().getId() == null) {
+        throw new ResourceNotFoundException(
+                "File owner not found"
         );
     }
+
+    if (!file.getOwner().getId().equals(owner.getId())) {
+        throw new ForbiddenException(
+                "You don't have permission to modify this file"
+        );
+    }
+
+    FileShare fileShare =
+            fileShareRepository.findByFile(file)
+                    .stream()
+                    .filter(share ->
+                            share.getSharedWith() != null &&
+                            share.getSharedWith().getId() != null &&
+                            share.getSharedWith().getId().equals(userId)
+                    )
+                    .findFirst()
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "File is not shared with this user"
+                            ));
+
+    fileShareRepository.delete(fileShare);
+}
 }
