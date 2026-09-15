@@ -50,6 +50,7 @@ I built this project to practice backend development with Spring Boot and to lea
 * See who has access to a file
 * Revoke access to a shared file
 * View files shared with you
+* Protected file access based on ownership and sharing permissions
 
 ## Technologies
 
@@ -62,6 +63,7 @@ I built this project to practice backend development with Spring Boot and to lea
 * Spring Data JPA / Hibernate
 * PostgreSQL
 * Maven
+* AES-256-GCM
 
 ### Frontend
 
@@ -152,9 +154,9 @@ Create a `.env` file in the project root:
 ```env
 POSTGRES_PASSWORD=your_database_password
 JWT_SECRET=your_jwt_secret
+FILE_ENCRYPTION_KEY=your_base64_encoded_32_byte_key
 ```
-
-The `.env` file should not be committed to Git.
+The FILE_ENCRYPTION_KEY is a Base64-encoded 32-byte key used for AES-256-GCM file encryption.
 
 ## API
 
@@ -187,6 +189,19 @@ Only the owner of a file can delete it, share it or revoke access.
 
 Sensitive configuration such as the database password and JWT secret is stored in environment variables.
 
+
+## File Encryption
+
+Uploaded files are encrypted before being stored on the server using AES-256-GCM.
+
+Each encrypted file has its own randomly generated initialization vector (IV), which is stored with the encrypted data. The encryption key is kept separately in an environment variable.
+
+The database stores file metadata such as the original filename, size and storage path. The actual file contents are stored in the Docker file-storage volume in encrypted form.
+
+When an authorized user downloads a file, the backend decrypts it and returns the original file to the user.
+
+Sensitive configuration such as the database password, JWT secret and file encryption key is stored in environment variables.
+
 ## Docker
 
 The project uses Docker Compose to run the backend and PostgreSQL database.
@@ -204,7 +219,6 @@ The backend is built from the Spring Boot application and PostgreSQL uses the of
 
 Some things that could be added in the future:
 
-* File encryption at rest
 * File size and type restrictions
 * Password reset
 * Email notifications
