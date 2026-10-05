@@ -8,7 +8,7 @@ I built this project to practice backend development with Spring Boot and to lea
 
 ### Login
 
-![Account](docs/screenshots/creat-acc.png)
+![Account](docs/screenshots/create-acc.png)
 
 ![Login](docs/screenshots/login.png)
 
