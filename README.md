@@ -7,16 +7,19 @@ I built this project to practice backend development with Spring Boot and to lea
 ## Screenshots
 
 ### Login
+The first interface displays a login page where the user is able to create an account or conncet to an existing one.
 
 ![Account](docs/screenshots/create-acc.png)
 
 ![Login](docs/screenshots/login.png)
 
 ### Dashboard
+Shows the number of personal files uploaded and the number of files shared with the user along with the total storage and a section to dispaly the recent uplaoded files.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
 ### My Files
+Displays the owned files along with details such as size, date and actions that can be made on them.
 
 ![My Files](docs/screenshots/myFiles.png)
 
