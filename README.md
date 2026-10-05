@@ -14,7 +14,7 @@ The first interface displays a login page where the user is able to create an ac
 ![Login](docs/screenshots/login.png)
 
 ### Dashboard
-Shows the number of personal files uploaded and the number of files shared with the user along with the total storage and a section to dispaly the recent uplaoded files.
+Shows the number of personal files uploaded and the number of files shared with the user along with the total storage and a section to display the recent uploaded files.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
