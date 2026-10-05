@@ -25,19 +25,22 @@ Displays the owned files along with details such as size, date and actions that 
 
 ### Actions On Files
 
+The user gets to upload a file they choose from the file explorer on their machine.
 ![Upload](docs/screenshots/upload.png)
-
+The user shares the uploaded file with another user through an existant email.
 ![Share File](docs/screenshots/share.png)
-
+The user gets to revoke acces from the users they shared files with.
 ![Revoke](docs/screenshots/revoke.png)
-
+The user is allowed to download the files shared.
 ![Download](docs/screenshots/download.png)
 
 ### Shared Files
+The shared with me interface displays the collection of files shared along with size, date, owner and actions.
 
 ![Shared Files](docs/screenshots/sharedWithMe.png)
 
 ### Settings
+The settings page allows the user to manage their account and to check its status.
 
 ![Settings](docs/screenshots/settings.png)
 
