@@ -47,6 +47,7 @@ The settings page allows the user to manage their account and to check its statu
 ## Features
 
 * Create an account and log in
+* Email verification using a six-digit, time-limited OTP
 * JWT authentication
 * Upload files
 * View uploaded files
