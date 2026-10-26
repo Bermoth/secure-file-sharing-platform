@@ -20,6 +20,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       FILE_ENCRYPTION_KEY: ${FILE_ENCRYPTION_KEY}
+      
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      OTP_SECRET: ${OTP_SECRET}
+
     volumes:
       - file_storage:/app/uploads
     depends_on:

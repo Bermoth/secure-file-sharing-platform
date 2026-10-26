@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Files from "./pages/Files";
 import Shared from "./pages/Shared";
 import Settings from "./pages/Settings";
+import VerifyOtp from "./pages/VerifyOtp";
 
 function ProtectedRoute({ children }) {
     const token = localStorage.getItem("token");
@@ -39,6 +40,11 @@ function App() {
                 <Route
                     path="/register"
                     element={<Register />}
+                />
+
+                <Route
+                    path="/verify-otp"
+                    element={<VerifyOtp />}
                 />
 
                 <Route

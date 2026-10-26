@@ -214,3 +214,36 @@ export async function revokeShare(fileId, userId) {
         }
     );
 }
+
+export async function verifyOtp(email, otp) {
+    const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email,
+            otp
+        })
+    });
+
+    if (!response.ok) {
+        let message = "Invalid or expired verification code.";
+
+        try {
+            const data = await response.json();
+            message = data.message || data.error || message;
+        } catch {
+            try {
+                const text = await response.text();
+                if (text) message = text;
+            } catch {
+                // Ignore parsing errors
+            }
+        }
+
+        throw new Error(message);
+    }
+
+    return response.text();
+}

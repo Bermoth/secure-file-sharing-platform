@@ -27,6 +27,9 @@ public class User implements UserDetails { //UserDetails interface wraps the app
 
     private String role;
 
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
     public User() {
     }
 
@@ -100,6 +103,15 @@ public boolean isCredentialsNonExpired() {
 
 @Override
 public boolean isEnabled() {
-    return true;
+    return emailVerified;
 }
+
+public boolean isEmailVerified() {
+    return emailVerified;
+}
+
+public void setEmailVerified(boolean emailVerified) {
+    this.emailVerified = emailVerified;
+}
+
 }

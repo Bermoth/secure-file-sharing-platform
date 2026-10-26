@@ -66,9 +66,11 @@ export default function Register() {
                 username,
                 email,
                 password
-            );
+                );
 
-            navigate("/login");
+            navigate("/verify-otp", {
+                   state: { email }
+                });
         } catch (err) {
             setError(
                 err.message ||
